@@ -1275,7 +1275,7 @@ int CWeapon::GetAmmoCurrent(bool use_item_to_spawn) const
 
 	for(int i = 0; i < (int)m_ammoTypes.size(); ++i) 
 	{
-		iAmmoCurrent += GetAmmoCount_forType( m_ammoTypes[i] );
+		iAmmoCurrent += GetAmmoCountForType( m_ammoTypes[i] );
 
 		if (!use_item_to_spawn)
 			continue;
@@ -1292,10 +1292,10 @@ int CWeapon::GetAmmoCount( u8 ammo_type, u32 max ) const {
   VERIFY( m_pInventory );
   R_ASSERT( ammo_type < m_ammoTypes.size() );
 
-  return GetAmmoCount_forType( m_ammoTypes[ ammo_type ], max );
+  return GetAmmoCountForType( m_ammoTypes[ ammo_type ], max );
 }
 
-int CWeapon::GetAmmoCount_forType( shared_str const& ammo_type, u32 max ) const {
+int CWeapon::GetAmmoCountForType( shared_str const& ammo_type, u32 max ) const {
   u32 res = 0;
   auto callback = [&]( const auto pIItem ) -> bool {
     auto* ammo = smart_cast<CWeaponAmmo*>( pIItem );
@@ -1304,10 +1304,13 @@ int CWeapon::GetAmmoCount_forType( shared_str const& ammo_type, u32 max ) const 
     return ( max > 0 && res >= max );
   };
 
+  bool include_ruck = !ParentIsActor() || !psActorFlags.test(AF_AMMO_ON_BELT);
+
   m_pCurrentInventory->IterateAmmo( false, callback );
-  if ( max == 0 || res < max )
-    if ( !smart_cast<const CActor*>( H_Parent() ) || !psActorFlags.test( AF_AMMO_ON_BELT ) )
-      m_pCurrentInventory->IterateAmmo( true, callback );
+  if (include_ruck) {
+      if (max == 0 || res < max)
+          m_pCurrentInventory->IterateAmmo(true, callback);
+  }
 
   return res;
 }
@@ -2114,13 +2117,12 @@ BOOL CWeapon::ParentMayHaveAimBullet	()
 	return EA->cast_actor()!=0;
 }
 
-BOOL CWeapon::ParentIsActor	()
+BOOL CWeapon::ParentIsActor	() const
 {
-	CObject* O=H_Parent();
+    const CObject* O=H_Parent();
 	if (!O) return FALSE;
-	CEntityAlive* EA=smart_cast<CEntityAlive*>(O);
-	if (!EA) return FALSE;
-	return EA->cast_actor()!=0;
+	const CActor* actor=smart_cast<const CActor*>(O);
+	return actor ? TRUE : FALSE;
 }
 
 const float &CWeapon::hit_probability	() const

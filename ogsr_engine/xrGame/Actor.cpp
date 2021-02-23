@@ -699,6 +699,10 @@ void CActor::Die(CObject* who)
 		TIItemContainer &l_blist = inventory().m_belt;
 		while (!l_blist.empty())	
 			inventory().Ruck(l_blist.front());
+
+        TIItemContainer &l_blist2 = inventory().m_belt2;
+        while (!l_blist2.empty())
+            inventory().Ruck(l_blist2.front());
 	}
 
 	cam_Set					(eacFreeLook);

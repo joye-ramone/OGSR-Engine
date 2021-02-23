@@ -109,18 +109,19 @@ static bool try_advance_ammo		(CWeapon const& weapon)
 	{
 		LPCSTR l_ammoType = weapon.m_ammoTypes[i].c_str();
 
-		for(TIItemContainer::iterator l_it = inventory.m_belt.begin(); inventory.m_belt.end() != l_it; ++l_it) 
-		{
-			CWeaponAmmo *l_pAmmo = smart_cast<CWeaponAmmo*>(*l_it);
-			
-			if(l_pAmmo && !xr_strcmp(l_pAmmo->cNameSect(), l_ammoType)) 
-			{
-				if (l_pAmmo->m_boxCurr < l_pAmmo->m_boxSize) {
-					l_pAmmo->m_boxCurr	= l_pAmmo->m_boxSize;
-					return				(true);
-				}
-			}
-		}
+        // can NPC put items to belt?
+		//for(TIItemContainer::iterator l_it = inventory.m_belt.begin(); inventory.m_belt.end() != l_it; ++l_it) 
+		//{
+		//	CWeaponAmmo *l_pAmmo = smart_cast<CWeaponAmmo*>(*l_it);
+		//	
+		//	if(l_pAmmo && !xr_strcmp(l_pAmmo->cNameSect(), l_ammoType)) 
+		//	{
+		//		if (l_pAmmo->m_boxCurr < l_pAmmo->m_boxSize) {
+		//			l_pAmmo->m_boxCurr	= l_pAmmo->m_boxSize;
+		//			return				(true);
+		//		}
+		//	}
+		//}
 
 		for(TIItemContainer::iterator l_it = inventory.m_ruck.begin(); inventory.m_ruck.end() != l_it; ++l_it) 
 		{

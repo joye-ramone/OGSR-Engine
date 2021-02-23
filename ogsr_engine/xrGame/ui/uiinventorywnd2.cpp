@@ -12,6 +12,9 @@
 #include "UIDragDropListEx.h"
 #include "UI3tButton.h"
 
+
+#include "WeaponAmmo.h"
+
 #include "../game_object_space.h"
 #include "../script_callback_ex.h"
 #include "../script_game_object.h"
@@ -155,6 +158,12 @@ void CUIInventoryWnd::InitInventory()
 		m_pUIBeltList->SetItem		(itm);
 	}
 
+    for (it = m_pInv->m_belt2.begin(), it_e = m_pInv->m_belt2.end(); it != it_e; ++it)
+    {
+        CUICellItem* itm = create_cell_item(*it);
+        m_pUIBelt2List->SetItem(itm);
+    }
+
 	ruck_list		= m_pInv->m_ruck;
 	std::sort		(ruck_list.begin(),ruck_list.end(),InventoryUtilities::GreaterRoomInRuck);
 
@@ -279,15 +288,20 @@ bool CUIInventoryWnd::ToBag(CUICellItem* itm, bool b_use_cursor_pos)
 {
 	PIItem	iitem						= (PIItem)itm->m_pData;
 
-	if(GetInventory()->CanPutInRuck(iitem))
-	{
-		CUIDragDropListEx*	old_owner		= itm->OwnerList();
-		CUIDragDropListEx*	new_owner		= NULL;
-		if(b_use_cursor_pos){
-				new_owner					= CUIDragDropListEx::m_drag_item->BackList();
-				VERIFY						(new_owner==m_pUIBagList);
-		}else
-				new_owner					= m_pUIBagList;
+    if (GetInventory()->CanPutInRuck(iitem))
+    {
+        CUIDragDropListEx*	old_owner = itm->OwnerList();
+        CUIDragDropListEx*	new_owner = NULL;
+
+        if (b_use_cursor_pos) 
+        {
+            new_owner = CUIDragDropListEx::m_drag_item->BackList();
+            VERIFY(new_owner == m_pUIBagList);
+        }
+        else 
+        {
+            new_owner = m_pUIBagList;
+        }
 
 #ifdef DEBUG
 		bool result =
@@ -318,13 +332,25 @@ bool CUIInventoryWnd::ToBelt(CUICellItem* itm, bool b_use_cursor_pos)
 
 	if(GetInventory()->CanPutInBelt(iitem))
 	{
+        CWeaponAmmo* ammo = smart_cast<CWeaponAmmo*>(iitem);
+
 		CUIDragDropListEx*	old_owner		= itm->OwnerList();
 		CUIDragDropListEx*	new_owner		= NULL;
-		if(b_use_cursor_pos){
-				new_owner					= CUIDragDropListEx::m_drag_item->BackList();
-				VERIFY						(new_owner==m_pUIBeltList);
-		}else
-				new_owner					= m_pUIBeltList;
+
+		if(b_use_cursor_pos)
+        {
+			new_owner					= CUIDragDropListEx::m_drag_item->BackList();
+
+            if ((ammo && new_owner != m_pUIBelt2List) || (!ammo && new_owner != m_pUIBeltList))
+                return false;
+
+			//VERIFY						(new_owner==m_pUIBeltList);
+		}
+        else
+        {
+            new_owner = ammo ? m_pUIBelt2List : m_pUIBeltList;
+        }
+
 #ifdef DEBUG
 		bool result =
 #endif
@@ -365,7 +391,7 @@ bool CUIInventoryWnd::OnItemSelected(CUICellItem* itm)
 {
 	SetCurrentItem(itm);
 
-	itm->ColorizeItems( { m_pUIBagList, m_pUIBeltList, m_pUIPistolList, m_pUIAutomaticList, m_pUIKnifeList, m_pUIHelmetList, m_pUIBIODetList, m_pUINightVisionList, m_pUIDetectorList, m_pUITorchList, m_pUIBinocularList, m_pUIOutfitList } );
+	itm->ColorizeItems( { m_pUIBagList, m_pUIBeltList, m_pUIBelt2List, m_pUIPistolList, m_pUIAutomaticList, m_pUIKnifeList, m_pUIHelmetList, m_pUIBIODetList, m_pUINightVisionList, m_pUIDetectorList, m_pUITorchList, m_pUIBinocularList, m_pUIOutfitList } );
 	return false;
 }
 
@@ -423,10 +449,13 @@ bool CUIInventoryWnd::OnItemDrop(CUICellItem* itm)
           if( GetSlotList( item->GetSlot() ) == new_owner )
             ToSlot( itm, true );
 	}break;
-	case iwBag: {
+	case iwBag:
+	{
 		ToBag(itm, true);
 	}break;
-	case iwBelt: {
+	case iwBelt:
+    case iwBelt2:
+	{
 		ToBelt(itm, true);
 	}break;
 	};
@@ -447,10 +476,10 @@ bool CUIInventoryWnd::OnItemDbClick(CUICellItem* itm)
 	auto t_old = GetType(old_owner);
 
 	switch (t_old) {
-	case iwSlot: {
+	case iwSlot:
+	{
 		ToBag(itm, false);
 	}break;
-
 	case iwBag:
 	{
           // Пытаемся найти свободный слот из списка разрешенных.
@@ -467,8 +496,9 @@ bool CUIInventoryWnd::OnItemDbClick(CUICellItem* itm)
             if ( !ToBelt( itm, false ) )
               ToSlot( itm, true );
 	}break;
-
-	case iwBelt: {
+	case iwBelt:
+    case iwBelt2:
+	{
 		ToBag(itm, false);
 	}break;
 	};
@@ -492,21 +522,22 @@ CUIDragDropListEx* CUIInventoryWnd::GetSlotList( u8 slot_idx ) {
 
 void CUIInventoryWnd::ClearAllLists()
 {
-	m_pUIBagList->ClearAll					(true);
-	m_pUIBeltList->ClearAll					(true);
-	m_pUIOutfitList->ClearAll				(true);
-	m_pUIPistolList->ClearAll				(true);
-	if (Core.Features.test(xrCore::Feature::ogse_new_slots))
-		m_pUIKnifeList->ClearAll(true);
-	m_pUIAutomaticList->ClearAll			(true);
-	if (Core.Features.test(xrCore::Feature::ogse_new_slots)) {
-		m_pUIDetectorList->ClearAll(true);
-		m_pUITorchList->ClearAll(true);
-		m_pUIHelmetList->ClearAll(true);
-		m_pUINightVisionList->ClearAll(true);
-		m_pUIBIODetList->ClearAll(true);
-		m_pUIBinocularList->ClearAll(true);
-	}
+    m_pUIBagList->ClearAll(true);
+    m_pUIBeltList->ClearAll(true);
+    m_pUIBelt2List->ClearAll(true);
+    m_pUIOutfitList->ClearAll(true);
+    m_pUIPistolList->ClearAll(true);
+    if (Core.Features.test(xrCore::Feature::ogse_new_slots))
+        m_pUIKnifeList->ClearAll(true);
+    m_pUIAutomaticList->ClearAll(true);
+    if (Core.Features.test(xrCore::Feature::ogse_new_slots)) {
+        m_pUIDetectorList->ClearAll(true);
+        m_pUITorchList->ClearAll(true);
+        m_pUIHelmetList->ClearAll(true);
+        m_pUINightVisionList->ClearAll(true);
+        m_pUIBIODetList->ClearAll(true);
+        m_pUIBinocularList->ClearAll(true);
+    }
 }
 
 

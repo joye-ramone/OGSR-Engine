@@ -75,15 +75,15 @@ public:
 	// Ищет на поясе IItem для указанного слота
 	PIItem					SameSlot			(const u32 slot, PIItem pIItem, bool bSearchRuck) const;
 	// Ищет на поясе или в рюкзаке IItem с указанным именем (cName())
-	PIItem					Get					(const char *name, bool bSearchRuck) const;
-	// Ищет на поясе или в рюкзаке IItem с указанным именем (id)
-	PIItem					Get					(const u16  id,	 bool bSearchRuck) const;
+	PIItem					GetForAmmo					(const char *name, bool bSearchRuck) const;
+	// Ищет на поясе или в рюкзаке IItem
+	PIItem					Get					(PIItem pIItem,	 bool bSearchRuck) const;
 	// Ищет на поясе или в рюкзаке IItem с указанным CLS_ID
-	PIItem					Get					(CLASS_ID cls_id,  bool bSearchRuck) const;
-	PIItem					GetAny				(const char *name) const;
+	//PIItem					Get					(CLASS_ID cls_id,  bool bSearchRuck) const;
+	//PIItem					GetAny				(const char *name) const;
 	PIItem					GetAmmo				(const char * name, bool forActor) const;
 
-	void   Iterate        ( bool, std::function<bool( const PIItem )> ) const;
+	//void   Iterate        ( bool, std::function<bool( const PIItem )> ) const;
 	void   IterateAmmo    ( bool, std::function<bool( const PIItem )> ) const;
 	PIItem GetAmmoMaxCurr ( const char*, bool ) const;
 	PIItem GetAmmoMinCurr ( const char*, bool ) const;
@@ -121,7 +121,7 @@ public:
 
 	void SetSlotsBlocked( u16 mask, bool bBlock, bool now = false );
 	TIItemContainer			m_all;
-	TIItemContainer			m_ruck, m_belt;
+	TIItemContainer			m_ruck, m_belt, m_belt2;
 	TISlotArr				m_slots;
 
 	//возвращает все кроме PDA в слоте и болта

@@ -478,7 +478,7 @@ protected:
 // Weapon and ammo
 //////////////////////////////////////////////////////////////////////////
 protected:
-	int GetAmmoCount_forType( shared_str const& ammo_type, u32 = 0 ) const;
+	int GetAmmoCountForType( shared_str const& ammo_type, u32 = 0 ) const;
 	int GetAmmoCount( u8 ammo_type, u32 = 0 ) const;
 
 public:
@@ -564,7 +564,7 @@ public:
 			bool			show_crosshair				();
 			bool			show_indicators				();
 	virtual BOOL			ParentMayHaveAimBullet		();
-	virtual BOOL			ParentIsActor				();
+	virtual BOOL			ParentIsActor				() const;
 
 private:
 	float					m_hit_probability[egdCount];

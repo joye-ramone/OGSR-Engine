@@ -1004,14 +1004,33 @@ CScriptGameObject *CScriptGameObject::ItemOnBelt(u32 item_id) const
 		return		(0);
 	}
 
-	TIItemContainer *belt = &(inventory_owner->inventory().m_belt);
-	if (belt->size() < item_id) {
-		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError, "item_on_belt: item id outside belt!");
-		return		(0);
-	}
+    TIItemContainer *belt = &(inventory_owner->inventory().m_belt);
+    if (item_id < belt->size())
+    {
+        if (belt->size() < item_id) {
+            ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError, "item_on_belt: item id outside belt!");
+            return		(0);
+        }
 
-	CInventoryItem	*result = belt->at(item_id);
-	return			(result ? result->object().lua_game_object() : 0);
+        CInventoryItem	*result = belt->at(item_id);
+        return			(result ? result->object().lua_game_object() : 0);
+    }
+
+    item_id -= belt->size();
+
+    TIItemContainer *belt2 = &(inventory_owner->inventory().m_belt2);
+    if (item_id < belt2->size())
+    {
+        if (belt2->size() < item_id) {
+            ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError, "item_on_belt: item id outside belt!");
+            return		(0);
+        }
+
+        CInventoryItem	*result = belt2->at(item_id);
+        return			(result ? result->object().lua_game_object() : 0);
+    }
+
+    return		(0);
 }
 
 CScriptGameObject *CScriptGameObject::ItemInRuck(u32 item_id) const
@@ -1196,6 +1215,10 @@ void CScriptGameObject::IterateBelt( const luabind::functor<void>& functor, cons
   for ( const auto* it : inventory_owner->inventory().m_belt )
     if ( !it->object().getDestroy() )
       functor( object, it->object().lua_game_object() );
+
+  for ( const auto* it : inventory_owner->inventory().m_belt2 )
+      if ( !it->object().getDestroy() )
+          functor( object, it->object().lua_game_object() );
 }
 
 

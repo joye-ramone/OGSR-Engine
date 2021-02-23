@@ -39,7 +39,7 @@ using namespace InventoryUtilities;
 CUIInventoryWnd*	g_pInvWnd = NULL;
 
 CUIInventoryWnd::CUIInventoryWnd() : 
-	m_pUIBagList(nullptr), m_pUIBeltList(nullptr), m_pUIPistolList(nullptr), m_pUIAutomaticList(nullptr),
+	m_pUIBagList(nullptr), m_pUIBeltList(nullptr), m_pUIBelt2List(nullptr), m_pUIPistolList(nullptr), m_pUIAutomaticList(nullptr),
 	m_pUIKnifeList(nullptr), m_pUIHelmetList(nullptr), m_pUIBIODetList(nullptr), m_pUINightVisionList(nullptr),
 	m_pUIDetectorList(nullptr), m_pUITorchList(nullptr), m_pUIBinocularList(nullptr), m_pUIOutfitList(nullptr)
 {
@@ -119,6 +119,10 @@ void CUIInventoryWnd::Init()
 	m_pUIBeltList						= xr_new<CUIDragDropListEx>(); AttachChild(m_pUIBeltList); m_pUIBeltList->SetAutoDelete(true);
 	xml_init.InitDragDropListEx			(uiXml, "dragdrop_belt", 0, m_pUIBeltList);
 	BindDragDropListEnents				(m_pUIBeltList);
+
+    m_pUIBelt2List = xr_new<CUIDragDropListEx>(); AttachChild(m_pUIBelt2List); m_pUIBelt2List->SetAutoDelete(true);
+    xml_init.InitDragDropListEx(uiXml, "dragdrop_belt2", 0, m_pUIBelt2List);
+    BindDragDropListEnents(m_pUIBelt2List);
 
 	m_pUIOutfitList						= xr_new<CUIOutfitDragDropList>(); AttachChild(m_pUIOutfitList); m_pUIOutfitList->SetAutoDelete(true);
 	xml_init.InitDragDropListEx			(uiXml, "dragdrop_outfit", 0, m_pUIOutfitList);
@@ -219,6 +223,7 @@ EListType CUIInventoryWnd::GetType(CUIDragDropListEx* l)
 {
 	if(l==m_pUIBagList)			return iwBag;
 	if(l==m_pUIBeltList)		return iwBelt;
+    if(l==m_pUIBelt2List)		return iwBelt2;
 
         for ( u8 i = 0; i < SLOTS_TOTAL; i++ )
           if ( m_slots_array[ i ] == l )
@@ -357,6 +362,7 @@ void CUIInventoryWnd::Hide()
 void CUIInventoryWnd::HideSlotsHighlight()
 {
 	m_pUIBeltList->is_highlighted = false;
+    m_pUIBelt2List->is_highlighted = false;
 	for (const auto& DdList : m_slots_array)
 		if (DdList)
 			DdList->is_highlighted = false;
@@ -364,8 +370,11 @@ void CUIInventoryWnd::HideSlotsHighlight()
 
 void CUIInventoryWnd::ShowSlotsHighlight(PIItem InvItem)
 {
-	if (InvItem->m_flags.test(CInventoryItem::Fbelt) && !Actor()->inventory().InBelt(InvItem))
-		m_pUIBeltList->is_highlighted = true;
+    if (InvItem->m_flags.test(CInventoryItem::Fbelt) && !Actor()->inventory().InBelt(InvItem))
+    {
+        m_pUIBeltList->is_highlighted = true;
+        m_pUIBelt2List->is_highlighted = true;
+    }
 
 	for (const u8 slot : InvItem->GetSlots())
 		if (auto DdList = m_slots_array[slot]; DdList && (!Actor()->inventory().InSlot(InvItem) || InvItem->GetSlot() != slot))
